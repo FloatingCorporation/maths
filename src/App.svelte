@@ -6,7 +6,7 @@
   let y: number
   let answer: string
 
-  let debug: boolean = true
+  let debug: boolean = false
 
   let lastCorrectTimestamp: number = 0
   let show: boolean = false
