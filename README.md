@@ -4,7 +4,9 @@ An application to help with nummary skills for children participating in the NES
 
 ## Deployment
 
-Committed changes are monitored and deployed to Cloudflare Pages automatically. If you want to deploy manually, go for it, but we aren't going to support it.
+Committed changes are deployed to Cloudflare Pages. If you want to deploy manually to your own server, go for it, but we aren't going to support it.
+
+*Edit:* To avoid certain people from spam committing and filling up my quota of Cloudflare Pages builds, deployments are manually changed by Noreen.
 
 ## Warranty, Disclaimers, Liability and Support
 
