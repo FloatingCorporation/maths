@@ -5,6 +5,7 @@
   let x: number
   let y: number
   let answer: string
+  let operator: '+' | '-' | '*' | '/' | '' = ''
 
   let debug: boolean = false
 
@@ -14,20 +15,22 @@
   const handleNewQuestion = (): void => {
     x = Math.floor(Math.random() * 10) + 1
     y = Math.floor(Math.random() * 10) + 1
+    // operator = Math.random() > 0.5 ? '+' : Math.random() > 0.5 ? '-' : Math.random() > 0.5 ? '*' : '/'
+    operator = Math.random() > 0.5 ? '+' : Math.random() > 0.5 ? '-' : '*'
     answer = ''
 
-    question = `${x} + ${y} = ?`
+    question = `${x} ${operator} ${y} = ?`
   }
 
   const onChange = (): void => {
-    if (Number(answer) === x + y) {
+    if (Number(answer) === eval(`${x} ${operator} ${y}`)) {
       handleNewQuestion()
       lastCorrectTimestamp = Date.now()
     }
     show =
       lastCorrectTimestamp == 0
         ? false
-        : Date.now() - Number(lastCorrectTimestamp) < 2000
+        : Date.now() - Number(lastCorrectTimestamp) < 1000
   }
 
   handleNewQuestion()
