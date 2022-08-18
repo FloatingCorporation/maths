@@ -57,8 +57,8 @@
     var peer = new Peer()
     peer.on('open', function(id) {
       // create qrcode
-      QRCode.toDataURL(id, {scale: 20}, function(err, url) {
-        qrCode = `${window.location.origin}/join/${id}`
+      QRCode.toDataURL(`${window.location.origin}/join/${id}`, {scale: 20}, function(err, url) {
+        qrCode = url
       })
     });
 
