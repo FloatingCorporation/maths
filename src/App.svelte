@@ -1,11 +1,22 @@
 <script lang="ts">
   import logo from './assets/rocket.png'
+  import Peer from 'peerjs'
+  // @ts-ignore
+  import QRCode from 'qrcode'
 
   let question: string = ''
   let x: number
   let y: number
   let answer: string
   let operator: '+' | '-' | '*' | '/' | '' = ''
+  let score: number = 0
+
+  let username: string = ''
+  let singlePlayer: boolean = true
+  let isServer: boolean = false
+  let qrCode: any = ''
+  let peers: any = {}
+  let connection: Function = (): void => {}
 
   let debug: boolean = false
 
@@ -25,6 +36,10 @@
   const onChange = (): void => {
     if (Number(answer) === eval(`${x} ${operator} ${y}`)) {
       handleNewQuestion()
+      score++
+      if (connection) {
+        connection()
+      }
       lastCorrectTimestamp = Date.now()
     }
     show =
@@ -34,6 +49,44 @@
   }
 
   handleNewQuestion()
+
+  // Multiplayer Handling
+  const startServer = (): void => {
+    singlePlayer = false
+    isServer = true
+    var peer = new Peer()
+    peer.on('open', function(id) {
+      // create qrcode
+      QRCode.toDataURL(id, {scale: 20}, function(err, url) {
+        qrCode = `${window.location.origin}/join/${id}`
+      })
+    });
+
+    peer.on('connection', function(conn) {
+      conn.on('data', function(data: {name: string, score: number}) {
+        peers[data.name] = data.score
+      })
+    })
+  }
+
+  const joinGame = (id: string): Function => {
+    singlePlayer = false
+    username = prompt('Enter your name')
+    let peer = new Peer();
+    let conn = peer.connect(id);
+
+    conn.on('open', function() {
+      conn.send({name: username, score: score});
+    });
+    
+    return (): void => {
+      conn.send({name: username, score: score});
+    }
+  }
+  
+  if (window.location.pathname.includes('/join/')) {
+    connection = joinGame(window.location.pathname.replace('/join/', ''))
+  }
 </script>
 
 <main>
@@ -46,6 +99,7 @@
   />
   <h1>Learn Maths Better</h1>
 
+  {#if !isServer}
   <div class="card">
     <h2 id="question">{question}</h2>
     <input
@@ -63,6 +117,18 @@
       <pre> {show} </pre>
     {/if}
   </div>
+  {/if}
+  {#if isServer}
+  <p>{JSON.stringify(peers)}</p>
+  {/if}
+  {#if qrCode}
+    <div class="qr-code">
+      <img src={qrCode} alt="QR Code" height="400px" />
+    </div>
+  {/if}
+  {#if singlePlayer}
+  <button on:click={startServer}>Start 'Server'</button>
+  {/if}
 </main>
 
 <style>
