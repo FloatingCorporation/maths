@@ -119,6 +119,10 @@
   {/if}
   {#if isServer}
     <p>{JSON.stringify(peers)}</p>
+    <p><i>
+      Please note that on school internet, WebRTC is blocked externally :(, so
+      if you're playing on your phone, you'll need to connect to detnsw.
+    </i></p>
   {/if}
   {#if qrCode}
     <div class="qr-code">
