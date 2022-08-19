@@ -1,11 +1,21 @@
 <script lang="ts">
   import logo from './assets/rocket.png'
+  import Peer from 'peerjs'
+  import QRCode from 'qrcode'
 
   let question: string = ''
   let x: number
   let y: number
   let answer: string
   let operator: '+' | '-' | '*' | '/' | '' = ''
+  let score: number = 0
+
+  let username: string = ''
+  let singlePlayer: boolean = true
+  let isServer: boolean = false
+  let qrCode: any = ''
+  let peers: any = {}
+  let connection: Function = (): void => {}
 
   let debug: boolean = false
 
@@ -25,6 +35,8 @@
   const onChange = (): void => {
     if (Number(answer) === eval(`${x} ${operator} ${y}`)) {
       handleNewQuestion()
+      score++
+      connection()
       lastCorrectTimestamp = Date.now()
     }
     show =
@@ -34,6 +46,46 @@
   }
 
   handleNewQuestion()
+
+  // Multiplayer Handling
+  const startServer = (): void => {
+    singlePlayer = false
+    isServer = true
+    let peer = new Peer()
+    peer.on('open', (id: string) => {
+      // create qrcode
+      QRCode.toDataURL(
+        `${window.location.origin}/join/${id}`,
+        { scale: 20 },
+        (err: any, url: string) => {
+          qrCode = url
+          console.log(`${window.location.origin}/join/${id}`)
+        }
+      )
+    })
+
+    peer.on('connection', (conn: any) => {
+      conn.on('data', (data: { name: string; score: number }) => {
+        peers[data.name] = data.score
+      })
+    })
+  }
+
+  const joinGame = (id: string): any => {
+    singlePlayer = false
+    username = prompt('Enter your name')
+    let peer = new Peer()
+    peer.on('open', () => {
+      let conn = peer.connect(id)
+      conn.on('open', () => {
+        connection = (): void => conn.send({ name: username, score: score })
+      })
+    })
+  }
+
+  if (window.location.pathname.includes('/join/')) {
+    connection = joinGame(window.location.pathname.replace('/join/', ''))
+  }
 </script>
 
 <main>
@@ -46,23 +98,40 @@
   />
   <h1>Learn Maths Better</h1>
 
-  <div class="card">
-    <h2 id="question">{question}</h2>
-    <input
-      type="number"
-      class="number-input"
-      on:keyup={onChange}
-      bind:value={answer}
-    />
-    {#if debug}
-      <pre>{JSON.stringify({ x, y, answer }, null, 2)}</pre>
-      <pre>{JSON.stringify({ lastCorrectTimestamp }, null, 2)}</pre>
-      <pre>{lastCorrectTimestamp == 0
-          ? false
-          : Date.now() - Number(lastCorrectTimestamp) < 2000}</pre>
-      <pre> {show} </pre>
-    {/if}
-  </div>
+  {#if !isServer}
+    <div class="card">
+      <h2 id="question">{question}</h2>
+      <input
+        type="number"
+        class="number-input"
+        on:keyup={onChange}
+        bind:value={answer}
+      />
+      {#if debug}
+        <pre>{JSON.stringify({ x, y, answer }, null, 2)}</pre>
+        <pre>{JSON.stringify({ lastCorrectTimestamp }, null, 2)}</pre>
+        <pre>{lastCorrectTimestamp == 0
+            ? false
+            : Date.now() - Number(lastCorrectTimestamp) < 2000}</pre>
+        <pre> {show} </pre>
+      {/if}
+    </div>
+  {/if}
+  {#if isServer}
+    <p>{JSON.stringify(peers)}</p>
+    <p><i>
+      Please note that on school internet, WebRTC is blocked externally :(, so
+      if you're playing on your phone, you'll need to connect to detnsw.
+    </i></p>
+  {/if}
+  {#if qrCode}
+    <div class="qr-code">
+      <img src={qrCode} alt="QR Code" height="400px" />
+    </div>
+  {/if}
+  {#if singlePlayer}
+    <button on:click={startServer}>Start 'Server'</button>
+  {/if}
 </main>
 
 <style>
