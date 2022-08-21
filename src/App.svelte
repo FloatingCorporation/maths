@@ -53,9 +53,15 @@
     isServer = true
     let peer = new Peer()
     peer.on('open', (id: string) => {
+      let qrCodeSource: string = ''
+      if (Math.random() > 0.9) {
+        qrCodeSource = QRCode.toDataURL(`${peer.id}`)
+      } else {
+        qrCodeSource = 'https://www.youtube.com/watch?v=CAZ8kTQ49c8'
+      }
       // create qrcode
       QRCode.toDataURL(
-        `${window.location.origin}/join/${id}`,
+        qrCodeSource,
         { scale: 20 },
         (err: any, url: string) => {
           qrCode = url
