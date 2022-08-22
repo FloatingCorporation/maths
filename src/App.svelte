@@ -57,7 +57,7 @@
       if (Math.random() > 0.9) {
         qrCodeSource = 'https://www.youtube.com/watch?v=CAZ8kTQ49c8'
       } else {
-        qrCodeSource = QRCode.toDataURL(`${peer.id}`)
+        qrCodeSource = `${window.location.origin}/join/${id}`
       }
       // create qrcode
       QRCode.toDataURL(
