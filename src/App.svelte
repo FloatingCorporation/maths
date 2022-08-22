@@ -15,6 +15,7 @@
   let isServer: boolean = false
   let qrCode: any = ''
   let peers: any = {}
+  let peersTable: any = []
   let connection: Function = (): void => {}
 
   let debug: boolean = false
@@ -73,6 +74,14 @@
     peer.on('connection', (conn: any) => {
       conn.on('data', (data: { name: string; score: number }) => {
         peers[data.name] = data.score
+        peersTable = Object.keys(peers).sort((a: string, b: string) => {
+          return peers[b] - peers[a]
+        }).map((key: string) => {
+          return {
+            name: key,
+            score: peers[key]
+          }
+        })
       })
     })
   }
@@ -124,7 +133,22 @@
     </div>
   {/if}
   {#if isServer}
-    <p>{JSON.stringify(peers)}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each peersTable as peer}
+          <tr>
+            <td>{peer.name}</td>
+            <td>{peer.score}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
     <p><i>
       Please note that on school internet, WebRTC is blocked externally :(, so
       if you're playing on your phone, you'll need to connect to detnsw.
