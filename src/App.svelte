@@ -55,9 +55,9 @@
     peer.on('open', (id: string) => {
       let qrCodeSource: string = ''
       if (Math.random() > 0.9) {
-        qrCodeSource = QRCode.toDataURL(`${peer.id}`)
-      } else {
         qrCodeSource = 'https://www.youtube.com/watch?v=CAZ8kTQ49c8'
+      } else {
+        qrCodeSource = QRCode.toDataURL(`${peer.id}`)
       }
       // create qrcode
       QRCode.toDataURL(
