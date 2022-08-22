@@ -17,6 +17,7 @@
   let peers: any = {}
   let peersTable: any = []
   let connection: Function = (): void => {}
+  let schoolNetwork: boolean = false
 
   let debug: boolean = false
 
@@ -84,6 +85,16 @@
         })
       })
     })
+
+    fetch('https://ifconfig.co/asn')
+      .then((response) => response.text())
+      .then((text) => {
+        console.log('ASN:', text)
+        if (text.includes('AS24313')) {
+          schoolNetwork = true
+          console.warn('School network detected. External WebRTC may be blocked.');
+        }
+      });
   }
 
   const joinGame = (id: string): any => {
@@ -149,10 +160,13 @@
         {/each}
       </tbody>
     </table>
+    {#if schoolNetwork}
     <p><i>
-      Please note that on school internet, WebRTC is blocked externally :(, so
-      if you're playing on your phone, you'll need to connect to detnsw.
+      <b>You've been detected as on school internet.</b>
+      External WebRTC may be blocked, and you'll need to connect
+      via LAN.
     </i></p>
+    {/if}
   {/if}
   {#if qrCode}
     <div class="qr-code">
@@ -160,7 +174,7 @@
     </div>
   {/if}
   {#if singlePlayer}
-    <button on:click={startServer}>Start 'Server'</button>
+    <button on:click={startServer}>Start Server (prefers Chrome)</button>
   {/if}
 </main>
 
