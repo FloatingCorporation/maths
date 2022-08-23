@@ -86,11 +86,11 @@
       })
     })
 
-    fetch('https://ifconfig.co/asn')
+    fetch('https://maths.pythonisterrible.cf/api/asn')
       .then((response) => response.text())
       .then((text) => {
         console.log('ASN:', text)
-        if (text.includes('AS24313')) {
+        if (text == '24313') {
           schoolNetwork = true
           console.warn('School network detected. External WebRTC may be blocked.');
         }
