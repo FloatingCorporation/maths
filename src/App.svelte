@@ -2,12 +2,10 @@
   import logo from './assets/rocket.png'
   import Peer from 'peerjs'
   import QRCode from 'qrcode'
+  import {generateNewQuestion, answerHandler } from './lib/questions'
+  import type {QuestionParameters} from './lib/questions'
 
-  let question: string = ''
-  let x: number
-  let y: number
-  let answer: string
-  let operator: '+' | '-' | '*' | '/' | '' = ''
+  let question: QuestionParameters = generateNewQuestion()
   let score: number = 0
 
   let username: string = ''
@@ -19,35 +17,21 @@
   let connection: Function = (): void => {}
   let schoolNetwork: boolean = false
 
-  let debug: boolean = false
-
   let lastCorrectTimestamp: number = 0
-  let show: boolean = false
-
-  const handleNewQuestion = (): void => {
-    x = Math.floor(Math.random() * 10) + 1
-    y = Math.floor(Math.random() * 10) + 1
-    // operator = Math.random() > 0.5 ? '+' : Math.random() > 0.5 ? '-' : Math.random() > 0.5 ? '*' : '/'
-    operator = Math.random() > 0.5 ? '+' : Math.random() > 0.5 ? '-' : '*'
-    answer = ''
-
-    question = `${x} ${operator} ${y} = ?`
-  }
+  let correctClass: boolean = false
 
   const onChange = (): void => {
-    if (Number(answer) === eval(`${x} ${operator} ${y}`)) {
-      handleNewQuestion()
+    if (answerHandler(question)) {
+      question = generateNewQuestion()
       score++
       connection()
       lastCorrectTimestamp = Date.now()
     }
-    show =
+    correctClass =
       lastCorrectTimestamp == 0
         ? false
         : Date.now() - Number(lastCorrectTimestamp) < 1000
   }
-
-  handleNewQuestion()
 
   // Multiplayer Handling
   const startServer = (): void => {
@@ -118,7 +102,7 @@
   <img
     src={logo}
     class="rocketlogo"
-    class:correct={show}
+    class:correct={correctClass}
     alt="Rocket Logo"
     id="logo"
   />
@@ -126,21 +110,13 @@
 
   {#if !isServer}
     <div class="card">
-      <h2 id="question">{question}</h2>
+      <h2 id="question">{question.question}</h2>
       <input
         type="number"
         class="number-input"
         on:keyup={onChange}
-        bind:value={answer}
+        bind:value={question.answer}
       />
-      {#if debug}
-        <pre>{JSON.stringify({ x, y, answer }, null, 2)}</pre>
-        <pre>{JSON.stringify({ lastCorrectTimestamp }, null, 2)}</pre>
-        <pre>{lastCorrectTimestamp == 0
-            ? false
-            : Date.now() - Number(lastCorrectTimestamp) < 2000}</pre>
-        <pre> {show} </pre>
-      {/if}
     </div>
   {/if}
   {#if isServer}
