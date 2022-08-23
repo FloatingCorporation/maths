@@ -9,6 +9,10 @@ export async function onRequest(context) {
       data, // arbitrary space for passing data between middlewares
     } = context;
 
-    return new Response(request.cf.asn);
+    return new Response(request.cf.asn, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
+    });
   }
   
