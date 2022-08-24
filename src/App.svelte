@@ -1,13 +1,14 @@
 <script lang="ts">
-  import logo from './assets/rocket.png'
-  import Peer from 'peerjs'
-  import QRCode from 'qrcode'
-  import {generateNewQuestion, answerHandler } from './lib/questions'
-  import type {QuestionParameters} from './lib/questions'
+  import logo from './assets/rocket.png' // Logo
+  import Peer from 'peerjs' // WebRTC libary so I don't have to shoot myself in the foot
+  import QRCode from 'qrcode' // QR code generator
+  import { generateNewQuestion, answerHandler } from './lib/questions'
+  import type { QuestionParameters } from './lib/questions'
 
   let question: QuestionParameters = generateNewQuestion()
   let score: number = 0
 
+  // Some very important variables
   let username: string = ''
   let singlePlayer: boolean = true
   let isServer: boolean = false
@@ -39,62 +40,59 @@
     isServer = true
     let peer = new Peer()
     peer.on('open', (id: string) => {
-      let qrCodeSource: string = ''
-      if (Math.random() > 0.9) {
-        qrCodeSource = 'https://www.youtube.com/watch?v=CAZ8kTQ49c8'
-      } else {
-        qrCodeSource = `${window.location.origin}/join/${id}`
-      }
-      // create qrcode
-      QRCode.toDataURL(
-        qrCodeSource,
-        { scale: 20 },
-        (err: any, url: string) => {
-          qrCode = url
-          console.log(`${window.location.origin}/join/${id}`)
-        }
-      )
-    })
-
-    peer.on('connection', (conn: any) => {
-      conn.on('data', (data: { name: string; score: number }) => {
-        peers[data.name] = data.score
-        peersTable = Object.keys(peers).sort((a: string, b: string) => {
-          return peers[b] - peers[a]
-        }).map((key: string) => {
-          return {
-            name: key,
-            score: peers[key]
-          }
-        })
+      let qrCodeSource: string = Math.random() > 0.9 ? 'https://www.youtube.com/watch?v=CAZ8kTQ49c8' : `${window.location.origin}/join/${id}`
+      // Generate QR Code
+      QRCode.toDataURL(qrCodeSource, { scale: 20 }, (err: any, url: string) => {
+        qrCode = url
+        console.log(`${window.location.origin}/join/${id}`)
+        if (err) console.error(err)
       })
     })
 
+    // On a connection...
+    peer.on('connection', (conn: any) => {
+      conn.on('data', (data: { name: string; score: number }) => {
+        // Expect data to be an object with the name and score
+        peers[data.name] = data.score
+        // Sort into a table thanks to Copilot
+        peersTable = Object.keys(peers)
+          .sort((a: string, b: string) => peers[b] - peers[a])
+          .map((key: string) => {
+            return {
+              name: key,
+              score: peers[key],
+            }
+          })
+      })
+    })
+
+    // Determine if the user is connected to the school network
     fetch('https://maths.pythonisterrible.cf/api/asn')
       .then((response) => response.text())
       .then((text) => {
         console.log('ASN:', text)
         if (text == '24313') {
           schoolNetwork = true
-          console.warn('School network detected. External WebRTC may be blocked.');
+          console.warn('School network detected. External WebRTC may be blocked.')
         }
-      });
+      })
   }
 
-  const joinGame = (id: string): any => {
+  const joinGame = (id: string): void => {
     singlePlayer = false
     username = prompt('Enter your name')
     let peer = new Peer()
     peer.on('open', () => {
       let conn = peer.connect(id)
       conn.on('open', () => {
+        // The connection() function is invoked on every correct answer.
         connection = (): void => conn.send({ name: username, score: score })
       })
     })
   }
 
   if (window.location.pathname.includes('/join/')) {
-    connection = joinGame(window.location.pathname.replace('/join/', ''))
+    joinGame(window.location.pathname.replace('/join/', ''))
   }
 </script>
 
@@ -119,6 +117,7 @@
       />
     </div>
   {/if}
+  
   {#if isServer}
     <table>
       <thead>
@@ -137,11 +136,10 @@
       </tbody>
     </table>
     {#if schoolNetwork}
-    <p><i>
-      <b>You've been detected as on school internet.</b>
-      External WebRTC may be blocked, and you'll need to connect
-      via LAN.
-    </i></p>
+      <p><i>
+          <b>You've been detected as on school internet.</b>
+          External WebRTC may be blocked, and you'll need to connect via LAN.
+      </i></p>
     {/if}
   {/if}
   {#if qrCode}
